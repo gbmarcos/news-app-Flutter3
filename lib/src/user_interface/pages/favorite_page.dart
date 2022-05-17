@@ -1,18 +1,16 @@
-import 'package:flutter/material.dart';
-
-import 'package:flutter_shimmer/flutter_shimmer.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animations/animations.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_shimmer/flutter_shimmer.dart';
 import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
 import 'package:implicitly_animated_reorderable_list/transitions.dart';
-import 'package:news_app/api_service/repositories/article_repository.dart';
-
-import 'package:news_app/local_storage/client.dart';
-import 'package:news_app/models/article.dart';
-import 'package:news_app/state_management/article_cubit.dart';
-import 'package:news_app/state_management/loading_more_state_cubit.dart';
-import 'package:news_app/user_interface/widgets/article_card.dart';
-import 'package:news_app/user_interface/widgets/empty_list_widget.dart';
+import 'package:news_app/src/common/data/repositories/article_repository.dart';
+import 'package:news_app/src/common/domain/article/article.dart';
+import 'package:news_app/src/common/services/local_storage/hive_service.dart';
+import 'package:news_app/src/state_management/article_cubit.dart';
+import 'package:news_app/src/state_management/loading_more_state_cubit.dart';
+import 'package:news_app/src/user_interface/widgets/article_card.dart';
+import 'package:news_app/src/user_interface/widgets/empty_list_widget.dart';
 
 class FavoritePage extends StatefulWidget {
   @override

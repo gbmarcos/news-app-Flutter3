@@ -1,11 +1,11 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:news_app/local_storage/client.dart';
-import 'package:news_app/state_management/article_cubit.dart';
-import 'package:news_app/state_management/loading_more_state_cubit.dart';
-import 'package:news_app/user_interface/pages/favorite_page.dart';
-import 'package:news_app/user_interface/pages/feed_page.dart';
+import 'package:news_app/src/common/services/local_storage/hive_service.dart';
+import 'package:news_app/src/state_management/article_cubit.dart';
+import 'package:news_app/src/state_management/loading_more_state_cubit.dart';
+import 'package:news_app/src/user_interface/pages/favorite_page.dart';
+import 'package:news_app/src/user_interface/pages/feed_page.dart';
 
 class HomePage extends StatefulWidget {
   @override

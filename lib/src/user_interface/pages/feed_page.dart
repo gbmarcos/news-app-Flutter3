@@ -1,14 +1,13 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import 'package:animations/animations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_shimmer/flutter_shimmer.dart';
-import 'package:news_app/api_service/repositories/article_repository.dart';
-import 'package:news_app/state_management/article_cubit.dart';
-import 'package:news_app/state_management/loading_more_state_cubit.dart';
-import 'package:news_app/user_interface/widgets/article_card.dart';
-import 'package:news_app/user_interface/widgets/empty_list_widget.dart';
+import 'package:news_app/src/common/data/repositories/article_repository.dart';
+import 'package:news_app/src/state_management/article_cubit.dart';
+import 'package:news_app/src/state_management/loading_more_state_cubit.dart';
+import 'package:news_app/src/user_interface/widgets/article_card.dart';
+import 'package:news_app/src/user_interface/widgets/empty_list_widget.dart';
 
 class FeedPage extends StatefulWidget {
   @override

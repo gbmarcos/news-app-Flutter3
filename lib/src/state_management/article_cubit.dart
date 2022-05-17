@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:news_app/api_service/repositories/article_repository.dart';
-import 'package:news_app/common/exceptions.dart';
+import 'package:news_app/src/common/data/repositories/article_repository.dart';
+import 'package:news_app/src/common/exceptions.dart';
 
 class ArticleCubit extends Cubit<ArticleListMonad> {
   //to perform lazy loading

@@ -1,22 +1,22 @@
-import 'dart:ui';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
 import 'package:hive/hive.dart';
-import 'package:news_app/local_storage/client.dart';
-import 'package:news_app/user_interface/pages/home_page.dart';
+import 'package:news_app/src/user_interface/pages/home_page.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:routemaster/routemaster.dart';
+
+import 'src/common/services/local_storage/hive_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   var directory = await getApplicationDocumentsDirectory();
+
   Hive.init(directory.path);
+
   await Hive.openBox(FAVORITE_ARTICLE_BOX_NAME);
 
   runApp(MyApp());
@@ -75,6 +75,13 @@ class MyApp extends StatelessWidget {
       ExactAssetPicture(
         SvgPicture.svgStringDecoderBuilder,
         'assets/search_icon.svg',
+      ),
+      context,
+    );
+    precachePicture(
+      ExactAssetPicture(
+        SvgPicture.svgStringDecoderBuilder,
+        'assets/error_icon.svg',
       ),
       context,
     );

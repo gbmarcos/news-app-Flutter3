@@ -1,15 +1,15 @@
 import 'dart:ui';
 
 import 'package:animations/animations.dart';
+import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:intl/intl.dart';
-import 'package:news_app/local_storage/client.dart';
-import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
-import 'package:news_app/models/article.dart';
-import 'package:news_app/user_interface/pages/article_detail_page.dart';
+import 'package:news_app/src/common/domain/article/article.dart';
+import 'package:news_app/src/common/services/local_storage/hive_service.dart';
+import 'package:news_app/src/user_interface/pages/article_detail_page.dart';
 
 class ArticleCard extends StatefulWidget {
   final Article article;

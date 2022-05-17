@@ -1,13 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-
 import 'package:animations/animations.dart';
 import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+import 'package:news_app/src/common/domain/article/article.dart';
+import 'package:news_app/src/common/services/local_storage/hive_service.dart';
 
-import 'package:news_app/local_storage/client.dart';
-import 'package:news_app/models/article.dart';
 
 class ArticleDetailPage extends StatefulWidget {
   static const String routeName = "articleDetail";
