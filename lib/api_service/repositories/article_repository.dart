@@ -1,36 +1,28 @@
 import 'package:dio/dio.dart';
-import 'package:news_app/models/article_model.dart';
+import 'package:fpdart/fpdart.dart';
+import 'package:news_app/api_service/client.dart';
+import 'package:news_app/common/exceptions.dart';
+import 'package:news_app/models/article.dart';
+
+typedef ArticleListMonad = Either<NetworkException, List<Article>>;
 
 class ArticleRepository {
-  late final Dio dioClient;
 
-  ArticleRepository({
-    required this.dioClient,
-  });
 
-  Future<List<ArticleModel>?>? getArticles(
+  Future<ArticleListMonad> getArticles(
       {required int start, required int limit, String? contains, List? favoriteIdList}) async {
-    try {
+
       //fetch data
-      var response = await dioClient.get('/articles', queryParameters: {
+      var response = await dioGet('/articles', query: {
         '_start': start,
         '_limit': limit,
         'title_contains': contains,
         if (favoriteIdList != null) 'id_in': favoriteIdList
       });
 
-      List data = response.data;
+      return response.map<List<Article>>((dynamic a) => articlesFromJson(a as List<dynamic>));
 
-      return data.map((element) => ArticleModel.fromJson(element)).toList();
     }
-    //catch erros
-    on DioError catch (e) {
-      if (e.response != null) {
-        print(e.response?.data);
-        print(e.response?.headers);
-      } else {
-        print(e.message);
-      }
-    }
-  }
+
+
 }

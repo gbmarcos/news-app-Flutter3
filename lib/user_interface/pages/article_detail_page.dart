@@ -7,12 +7,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 
 import 'package:news_app/local_storage/client.dart';
-import 'package:news_app/models/article_model.dart';
+import 'package:news_app/models/article.dart';
 
 class ArticleDetailPage extends StatefulWidget {
   static const String routeName = "articleDetail";
 
-  final ArticleModel article;
+  final Article article;
   final Function? additionalFavoriteChangeFunction;
 
   const ArticleDetailPage({

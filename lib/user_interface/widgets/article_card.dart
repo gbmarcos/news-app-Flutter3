@@ -7,12 +7,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:intl/intl.dart';
 import 'package:news_app/local_storage/client.dart';
-import 'package:news_app/models/article_model.dart';
 import 'package:assorted_layout_widgets/assorted_layout_widgets.dart';
+import 'package:news_app/models/article.dart';
 import 'package:news_app/user_interface/pages/article_detail_page.dart';
 
 class ArticleCard extends StatefulWidget {
-  final ArticleModel article;
+  final Article article;
   final Function? customizedFavoriteChangeFunction;
 
   const ArticleCard({Key? key, required this.article, this.customizedFavoriteChangeFunction})

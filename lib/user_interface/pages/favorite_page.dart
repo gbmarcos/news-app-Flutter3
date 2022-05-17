@@ -5,9 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animations/animations.dart';
 import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
 import 'package:implicitly_animated_reorderable_list/transitions.dart';
+import 'package:news_app/api_service/repositories/article_repository.dart';
 
 import 'package:news_app/local_storage/client.dart';
-import 'package:news_app/models/article_model.dart';
+import 'package:news_app/models/article.dart';
 import 'package:news_app/state_management/article_cubit.dart';
 import 'package:news_app/state_management/loading_more_state_cubit.dart';
 import 'package:news_app/user_interface/widgets/article_card.dart';
@@ -44,7 +45,6 @@ class _FavoritePageState extends State<FavoritePage> {
   Widget build(BuildContext context) {
     String title = searching ? "Search" : "Favorites";
     String titleKey = searching ? "title2" : "title1";
-    String emptyListWidgetKey = searching ? "emptyListWidgetKey2" : "emptyListWidgetKey1";
 
     TextStyle titleStyle = TextStyle(fontSize: 18);
 
@@ -169,98 +169,100 @@ class _FavoritePageState extends State<FavoritePage> {
                 padding: EdgeInsets.all(2),
                 child: ClipRRect(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                  child: BlocBuilder<ArticleCubit, List<ArticleModel>?>(
-                    builder: (context, articleList) {
-                      if (articleList == null) {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-
-                      if (articleList.isEmpty) {
-                        return Center(
-                          child: AnimatedSwitcher(
-                            duration: transitionDuration,
-                            switchInCurve: transitionCurve,
-                            switchOutCurve: transitionCurve,
-                            child: searching
-                                ? emptySearchListIndicator(emptyListWidgetKey)
-                                : emptyFavoriteListIndicator(emptyListWidgetKey),
-                          ),
-                        );
-                      }
-                      return Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.topLeft,
-                            child: AnimatedContainer(
-                              padding: const EdgeInsets.only(
-                                left: 16,
-                              ),
-                              duration: transitionDuration,
-                              curve: transitionCurve,
-                              height: searching ? 0 : 55,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                "Favorite articles",
-                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                  child: BlocBuilder<ArticleCubit, ArticleListMonad>(
+                    builder: (context, data) {
+                      return data.fold(
+                        (error) {
+                          return error.when(
+                            (message, statusCode, response, stackTrace) => Center(
+                              child: UnknownErrorWidget(),
+                            ),
+                            noDataException: () => Center(
+                              child: AnimatedSwitcher(
+                                duration: transitionDuration,
+                                switchInCurve: transitionCurve,
+                                switchOutCurve: transitionCurve,
+                                child: searching ? EmptySearchWidget() : EmptyFavoriteListWidget(),
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: NotificationListener<ScrollUpdateNotification>(
-                              child: ImplicitlyAnimatedReorderableList<ArticleModel>(
-                                areItemsTheSame: (oldItem, newItem) => oldItem.id == newItem.id,
-                                // ArticleModel(id: -1) is addend to build the loading-more indicator widget at the end od the list
-                                items: articleList + [ArticleModel(id: -1)],
-                                onReorderFinished: (item, from, to, newItems) {},
-                                padding: EdgeInsets.only(top: 16, bottom: 60),
-                                physics: AlwaysScrollableScrollPhysics(),
-                                itemBuilder: (
-                                  context,
-                                  animation,
-                                  article,
-                                  i,
-                                ) {
-                                  // loading-more indicator widget is built if the id is -1
-                                  if (article.id == -1) {
+                            loadingDataException: () => Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        },
+                        (articleList) => Column(
+                          children: [
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: AnimatedContainer(
+                                padding: const EdgeInsets.only(
+                                  left: 16,
+                                ),
+                                duration: transitionDuration,
+                                curve: transitionCurve,
+                                height: searching ? 0 : 55,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  "Favorite articles",
+                                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: NotificationListener<ScrollUpdateNotification>(
+                                child: ImplicitlyAnimatedReorderableList<Article>(
+                                  areItemsTheSame: (oldItem, newItem) => oldItem.id == newItem.id,
+                                  // ArticleModel(id: -1) is addend to build the loading-more indicator widget at the end od the list
+                                  items: articleList + [Article(id: -1)],
+                                  onReorderFinished: (item, from, to, newItems) {},
+                                  padding: EdgeInsets.only(top: 16, bottom: 60),
+                                  physics: AlwaysScrollableScrollPhysics(),
+                                  itemBuilder: (
+                                    context,
+                                    animation,
+                                    article,
+                                    i,
+                                  ) {
+                                    // loading-more indicator widget is built if the id is -1
+                                    if (article.id == -1) {
+                                      return Reorderable(
+                                        key: ValueKey<int>(article.id!),
+                                        child: SizeFadeTransition(
+                                          animation: animation,
+                                          sizeFraction: 0.7,
+                                          curve: Curves.easeInOut,
+                                          child: loadingWidget(),
+                                        ),
+                                      );
+                                    }
                                     return Reorderable(
                                       key: ValueKey<int>(article.id!),
                                       child: SizeFadeTransition(
                                         animation: animation,
                                         sizeFraction: 0.7,
                                         curve: Curves.easeInOut,
-                                        child: loadingWidget(),
+                                        child: ArticleCard(
+                                          article: article,
+                                          customizedFavoriteChangeFunction: () {
+                                            context.read<ArticleCubit>().removeArticle(article.id!);
+                                          },
+                                        ),
                                       ),
                                     );
+                                  },
+                                ),
+                                onNotification: (ScrollUpdateNotification notification) {
+                                  // loadMoreArticles() function is called if the Scrollable has less than 40 pixels left to reach the end
+                                  var metrics = notification.metrics;
+                                  if (metrics.extentAfter < 40 && metrics.pixels != 0) {
+                                    loadMoreArticles();
                                   }
-                                  return Reorderable(
-                                    key: ValueKey<int>(article.id!),
-                                    child: SizeFadeTransition(
-                                      animation: animation,
-                                      sizeFraction: 0.7,
-                                      curve: Curves.easeInOut,
-                                      child: ArticleCard(
-                                        article: article,
-                                        customizedFavoriteChangeFunction: () {
-                                          context.read<ArticleCubit>().removeArticle(article.id!);
-                                        },
-                                      ),
-                                    ),
-                                  );
+                                  return true;
                                 },
                               ),
-                              onNotification: (ScrollUpdateNotification notification) {
-                                // loadMoreArticles() function is called if the Scrollable has less than 40 pixels left to reach the end
-                                var metrics = notification.metrics;
-                                if (metrics.extentAfter < 40 && metrics.pixels != 0) {
-                                  loadMoreArticles();
-                                }
-                                return true;
-                              },
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       );
                     },
                   ),
@@ -321,80 +323,5 @@ class _FavoritePageState extends State<FavoritePage> {
           );
       loadingMoreStateCubit.finishLoading();
     }
-  }
-
-  //widget displayed when search result is empty
-  Widget emptySearchListIndicator(String emptyListWidgetKey) {
-    return EmptyListWidget(
-      key: ValueKey<String>(emptyListWidgetKey),
-      svgPath: "assets/search_icon.svg",
-      text: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "There are no results for this search.",
-            style: TextStyle(color: Color(0xFF1F2937), fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          Divider(
-            color: Colors.transparent,
-          ),
-          Text(
-            " Try searching another word.",
-            style: TextStyle(
-              color: Color(0xFF1F2937),
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  //widget displayed when favorite list is empty
-  Widget emptyFavoriteListIndicator(String emptyListWidgetKey) {
-    return EmptyListWidget(
-      key: ValueKey<String>(emptyListWidgetKey),
-      svgPath: "assets/favorite_icon.svg",
-      text: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "You don't have favorites yet.",
-            style: TextStyle(color: Color(0xFF1F2937), fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          Divider(
-            color: Colors.transparent,
-          ),
-          RichText(
-            textScaleFactor: 1.1,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: "Tap on the  ",
-                  style: TextStyle(
-                    color: Color(0xFF1F2937),
-                    fontSize: 14,
-                  ),
-                ),
-                WidgetSpan(
-                  child: Icon(
-                    Icons.favorite_border,
-                    size: 20,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
-                TextSpan(
-                  text: "  to mark an article as a favortite.",
-                  style: TextStyle(
-                    color: Color(0xFF1F2937),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }

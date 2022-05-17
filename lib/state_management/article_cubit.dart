@@ -1,67 +1,78 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:news_app/api_service/client.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:news_app/api_service/repositories/article_repository.dart';
-import 'package:news_app/models/article_model.dart';
+import 'package:news_app/common/exceptions.dart';
 
-
-class ArticleCubit extends Cubit<List<ArticleModel>?> {
-
+class ArticleCubit extends Cubit<ArticleListMonad> {
   //to perform lazy loading
   final int limit = 10;
 
-  ArticleCubit() : super(null);
+  ArticleCubit() : super(Either.left(NetworkException.loadingDataException()));
 
   Future<void> loadArticles({String? contains, List? favoriteIdList}) async {
     //if favoriteIdList is a not null empty list, ArticleCubit emits a empty ArticleModel list
     if (favoriteIdList != null && favoriteIdList.isEmpty) {
-      emit(<ArticleModel>[]);
+      emit(Either.left(NetworkException.noDataException()));
       return;
     }
 
-    List<ArticleModel>? response = await ArticleRepository(dioClient: dioClient).getArticles(
+    final response = await ArticleRepository().getArticles(
       start: 0,
       limit: limit,
       contains: contains,
       favoriteIdList: favoriteIdList,
     );
 
-    if (response != null) {
-      emit(response);
-    }
+    emit(response);
   }
 
   Future<void> loadMoreArticles({String? contains, List? favoriteIdList}) async {
-
     //if favoriteIdList is a not null empty list, ArticleCubit emits a empty ArticleModel list
     if (favoriteIdList != null && favoriteIdList.isEmpty) {
-      emit(<ArticleModel>[]);
+      emit(Either.left(NetworkException.noDataException()));
       return;
     }
 
-    int start = state?.length ?? 0;
+    int start = state.fold((error) => 0, (list) => list.length);
+
     print("loading more");
-    List<ArticleModel>? response = await ArticleRepository(dioClient: dioClient).getArticles(
+    final response = await ArticleRepository().getArticles(
       start: start,
       limit: limit,
       contains: contains,
       favoriteIdList: favoriteIdList,
     );
-    if (response != null) {
-      if (state != null) {
-        List<ArticleModel> newState = state! + response;
-        emit(newState);
-      } else {
-        emit(response);
-      }
-    }
+
+    response.fold(
+      (l) => emit(Either.left(l)),
+      (newEventsList) {
+        state.fold(
+          (l) => emit(Either.right(newEventsList)),
+          (currentEventList) => emit(
+            Either.right([
+              ...currentEventList,
+              ...newEventsList,
+            ]),
+          ),
+        );
+      },
+    );
   }
 
-  void removeArticle(int id){
-    var newState = state?.where((article) => article.id!=id).toList();
-    emit(newState);
+  void removeArticle(int id) {
+    state.fold(
+      (l) {},
+      (list) {
+        final newList = list.where((element) => element.id != id).toList();
+
+        emit(newList.isEmpty
+            ? Either.left(NetworkException.noDataException())
+            : Either.right(newList));
+      },
+    );
   }
 
   clear() {
-    emit(null);
+    emit(Either.left(NetworkException.loadingDataException()));
   }
 }

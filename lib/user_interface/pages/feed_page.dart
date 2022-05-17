@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_shimmer/flutter_shimmer.dart';
-
-import 'package:news_app/models/article_model.dart';
+import 'package:news_app/api_service/repositories/article_repository.dart';
 import 'package:news_app/state_management/article_cubit.dart';
 import 'package:news_app/state_management/loading_more_state_cubit.dart';
 import 'package:news_app/user_interface/widgets/article_card.dart';
@@ -167,73 +166,74 @@ class _FeedPageState extends State<FeedPage> {
                 padding: EdgeInsets.all(2),
                 child: ClipRRect(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-                  child: BlocBuilder<ArticleCubit, List<ArticleModel>?>(
-                    builder: (context, articleList) {
-                      if (articleList == null) {
-                        return Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-
-                      if (articleList.isEmpty) {
-                        return Center(
-                          child: AnimatedSwitcher(
-                            duration: transitionDuration,
-                            switchInCurve: transitionCurve,
-                            switchOutCurve: transitionCurve,
-                            child: searching
-                                ? emptySearchListIndicator(emptyListWidgetKey)
-                                : emptyArticleListIndicator(emptyListWidgetKey),
-                          ),
-                        );
-                      }
-
-                      return Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.topLeft,
-                            child: AnimatedContainer(
-                              padding: const EdgeInsets.only(
-                                left: 16,
-                              ),
-                              duration: transitionDuration,
-                              curve: transitionCurve,
-                              height: searching ? 0 : 55,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                "News feed",
-                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                  child: BlocBuilder<ArticleCubit, ArticleListMonad>(
+                    builder: (context, data) {
+                      return data.fold(
+                        (error) {
+                          return error.when(
+                            (message, statusCode, response, stackTrace) => Center(
+                              child: UnknownErrorWidget(),
+                            ),
+                            noDataException: () => Center(
+                              child: AnimatedSwitcher(
+                                duration: transitionDuration,
+                                switchInCurve: transitionCurve,
+                                switchOutCurve: transitionCurve,
+                                child: searching ? EmptySearchWidget() : EmptyArticleListWidget(),
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: NotificationListener<ScrollUpdateNotification>(
-                              child: ListView.builder(
-                                padding: EdgeInsets.only(top: 10, bottom: 60),
-                                physics: AlwaysScrollableScrollPhysics(),
-                                // itemCount = articleList.length + 1 to build the loading-more indicator widget at the end of the list
-                                itemCount: articleList.length + 1,
-                                itemBuilder: (context, index) {
-                                  // loading-more indicator widget is built at the last index
-                                  if (index == articleList.length) {
-                                    return loadingWidget();
+                            loadingDataException: () => Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        },
+                        (articleList) => Column(
+                          children: [
+                            Align(
+                              alignment: Alignment.topLeft,
+                              child: AnimatedContainer(
+                                padding: const EdgeInsets.only(
+                                  left: 16,
+                                ),
+                                duration: transitionDuration,
+                                curve: transitionCurve,
+                                height: searching ? 0 : 55,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  "News feed",
+                                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: NotificationListener<ScrollUpdateNotification>(
+                                child: ListView.builder(
+                                  padding: EdgeInsets.only(top: 10, bottom: 60),
+                                  physics: AlwaysScrollableScrollPhysics(),
+                                  // itemCount = articleList.length + 1 to build the loading-more indicator widget at the end of the list
+                                  itemCount: articleList.length + 1,
+                                  itemBuilder: (context, index) {
+                                    // loading-more indicator widget is built at the last index
+                                    if (index == articleList.length) {
+                                      return loadingWidget();
+                                    }
+                                    return ArticleCard(
+                                      article: articleList[index],
+                                    );
+                                  },
+                                ),
+                                onNotification: (ScrollUpdateNotification notification) {
+                                  //para cargar más eventos al llegar al final de la lista
+                                  var metrics = notification.metrics;
+                                  if (metrics.extentAfter < 40 && metrics.pixels != 0) {
+                                    loadMoreArticles();
                                   }
-                                  return ArticleCard(
-                                    article: articleList[index],
-                                  );
+                                  return true;
                                 },
                               ),
-                              onNotification: (ScrollUpdateNotification notification) {
-                                //para cargar más eventos al llegar al final de la lista
-                                var metrics = notification.metrics;
-                                if (metrics.extentAfter < 40 && metrics.pixels != 0) {
-                                  loadMoreArticles();
-                                }
-                                return true;
-                              },
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       );
                     },
                   ),
@@ -292,44 +292,5 @@ class _FeedPageState extends State<FeedPage> {
           );
       loadingMoreStateCubit.finishLoading();
     }
-  }
-
-  //widget displayed when search result is empty
-  Widget emptySearchListIndicator(String emptyListWidgetKey) {
-    return EmptyListWidget(
-      key: ValueKey<String>(emptyListWidgetKey),
-      svgPath: "assets/search_icon.svg",
-      text: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "There are no results for this search.",
-            style: TextStyle(color: Color(0xFF1F2937), fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          Divider(
-            color: Colors.transparent,
-          ),
-          Text(
-            " Try searching another word.",
-            style: TextStyle(
-              color: Color(0xFF1F2937),
-              fontSize: 14,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  //widget displayed when article list is empty
-  Widget emptyArticleListIndicator(String emptyListWidgetKey) {
-    return EmptyListWidget(
-      key: ValueKey<String>(emptyListWidgetKey),
-      svgPath: "assets/news_icon.svg",
-      text: Text(
-        "There is no news yet",
-        style: TextStyle(color: Color(0xFF1F2937), fontSize: 14),
-      ),
-    );
   }
 }
