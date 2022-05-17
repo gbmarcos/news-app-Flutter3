@@ -35,7 +35,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
           "Article",
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
-        backgroundColor: Color(0xFF111827),
+        backgroundColor: Color(0xFF152A28),
       ),
       body: SingleChildScrollView(
         child: Column(

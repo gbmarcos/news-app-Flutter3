@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -30,14 +31,19 @@ final routes = RouteMap(
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-
     preloadAssetsImages(context);
 
     return MaterialApp.router(
       theme: ThemeData(
-        primaryColor: Color(0xFF0C39AC),
+        colorScheme: ColorScheme.light().copyWith(
+          primary: Colors.teal,
+        ),
+        primaryColor: Colors.teal,
         fontFamily: "IBMPlexSans",
-        appBarTheme: AppBarTheme(brightness: Brightness.dark),
+        appBarTheme: AppBarTheme(
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+          backgroundColor: Colors.teal,
+        ),
       ),
       routerDelegate: RoutemasterDelegate(routesBuilder: (_) => routes),
       routeInformationParser: RoutemasterParser(),
