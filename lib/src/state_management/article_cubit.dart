@@ -44,7 +44,12 @@ class ArticleCubit extends Cubit<ArticleListMonad> {
     );
 
     response.fold(
-      (l) => emit(Either.left(l)),
+      (l) {
+        state.fold(
+          (l) => emit(Either.left(l)),
+          (currentEventList) => emit(state),
+        );
+      },
       (newEventsList) {
         state.fold(
           (l) => emit(Either.right(newEventsList)),
